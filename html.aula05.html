@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Site Interativo de Hygor</title>
+  <meta name="description" content="Site interativo criado por Hygor para praticar manipulação de DOM e efeitos visuais em JavaScript." />
+  <style>
+    :root{
+      --bg:#0f172a;
+      --card:#0b1220;
+      --accent:#06b6d4;
+      --muted:#94a3b8;
+      --glass:rgba(255,255,255,0.04);
+    }
+    *{box-sizing:border-box}
+    html,body{
+      height:100%;
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      color:#e6eef6;
+      overflow:hidden;
+    }
+
+    /* Fundo animado */
+    body {
+      background: radial-gradient(circle at 20% 30%, #071025, #071b2b 80%);
+    }
+    canvas#bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1;
+    }
+
+    .wrap{
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:32px;
+    }
+    .card{
+      width:100%;
+      max-width:720px;
+      background:linear-gradient(180deg,var(--card), rgba(11,18,32,0.85));
+      border-radius:20px;
+      padding:32px;
+      box-shadow:0 20px 50px rgba(2,6,23,0.6);
+      border:1px solid rgba(255,255,255,0.05);
+      backdrop-filter: blur(8px);
+      transform: translateY(20px);
+      opacity: 0;
+      animation: slideUp 0.9s ease forwards;
+    }
+    @keyframes slideUp {
+      from {opacity:0; transform:translateY(40px);}
+      to {opacity:1; transform:translateY(0);}
+    }
+
+    h1{margin:0 0 8px;font-size:24px}
+    p.lead{margin:0 0 18px;color:var(--muted)}
+
+    .controls{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:18px
+    }
+    input[type=text]{
+      flex:1;
+      min-width:180px;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.04);
+      background:var(--glass);
+      color:inherit;
+      transition: all 0.2s ease;
+    }
+    input[type=text]:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 6px rgba(6,182,212,0.4);
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:10px;
+      border:0;
+      cursor:pointer;
+      background:linear-gradient(90deg,var(--accent),#0891b2);
+      color:#042;
+      box-shadow:0 6px 18px rgba(6,182,212,0.14);
+      font-weight:600;
+      transition:transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn.secondary{
+      background:transparent;
+      color:var(--accent);
+      border:1px solid rgba(6,182,212,0.3);
+      box-shadow:none;
+    }
+    .btn:hover{
+      transform:translateY(-3px) scale(1.03);
+      box-shadow:0 10px 25px rgba(6,182,212,0.35);
+    }
+
+    #mensagem{
+      min-height:48px;
+      padding:12px;
+      border-radius:10px;
+      background:rgba(255,255,255,0.03);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border:1px dashed rgba(255,255,255,0.08);
+      color:#cfeef8
+    }
+    small.hint{color:var(--muted);display:block;margin-top:10px}
+
+    /* animação simples */
+    .fade-in{animation:fadeIn .35s ease both}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+    footer{margin-top:16px;color:var(--muted);font-size:13px;text-align:center}
+  </style>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+
+  <div class="wrap">
+    <div class="card">
+      <h1>Hygor: botão "Clique aqui"</h1>
+      <p class="lead">Testando conhecimentos em DOM e efeitos visuais ✨ — usando <code>getElementById</code>, manipuladores simples e um toque de estilo.</p>
+      <div class="controls">
+        <input id="textoEntrada" type="text" placeholder="Digite a mensagem que deseja mostrar (opcional)" />
+        <button id="meuBotao" class="btn">Mostrar mensagem</button>
+        <button id="meuAlerta" class="btn secondary">Mostrar alert</button>
+        <a href="#" id="meuLink" class="btn secondary" style="text-decoration:none">Clique aqui (link)</a>
+      </div>
+
+      <div id="mensagem" aria-live="polite">Aguardando ação do usuário...</div>
+      <small class="hint">💡 Dica: pressione "Mostrar alert" para ver o alert nativo. O link abre meu Instagram em nova aba.</small>
+
+      <footer>Feito por Hygor — 🚀</footer>
+    </div>
+  </div>
+
+  <script>
+    // Seleções por id
+    const btn = document.getElementById('meuBotao');
+    const alerta = document.getElementById('meuAlerta');
+    const link = document.getElementById('meuLink');
+    const mensagem = document.getElementById('mensagem');
+    const entrada = document.getElementById('textoEntrada');
+
+    function exibirTexto(text){
+      mensagem.classList.remove('fade-in');
+      void mensagem.offsetWidth;
+      mensagem.innerText = text;
+      mensagem.classList.add('fade-in');
+    }
+
+    btn.onclick = function(){
+      const t = entrada.value.trim();
+      if(t.length){
+        exibirTexto(t);
+        entrada.value = '';
+      } else {
+        exibirTexto('Você clicou no botão!');
+      }
+    };
+
+    alerta.onclick = function(){
+      const t = entrada.value.trim() || 'Alerta: você clicou no botão de alert!';
+      alert(t);
+    };
+
+    link.onclick = function(evt){
+      evt.preventDefault();
+      exibirTexto('Abrindo meu Instagram...');
+      window.open('https://www.instagram.com/gonzaga.hs?igsh=MWcxcjRmbGtpcnZmdQ==', '_blank');
+    };
+
+    entrada.addEventListener('keydown', function(e){
+      if(e.key === 'Enter') btn.click();
+    });
+
+    window.addEventListener('load', function(){
+      if(mensagem.innerText.trim().includes('Aguardando')){
+        setTimeout(()=> exibirTexto('Pronto — teste os botões acima.'), 600);
+      }
+    });
+
+    /* Fundo de partículas */
+    const canvas = document.getElementById('bg');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resize(){
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    for(let i=0;i<80;i++){
+      particles.push({
+        x: Math.random()*canvas.width,
+        y: Math.random()*canvas.height,
+        r: Math.random()*2+1,
+        dx: (Math.random()-0.5)*0.6,
+        dy: (Math.random()-0.5)*0.6
+      });
+    }
+
+    function animate(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = "#06b6d4";
+      particles.forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fill();
+        p.x+=p.dx;
+        p.y+=p.dy;
+        if(p.x<0||p.x>canvas.width) p.dx*=-1;
+        if(p.y<0||p.y>canvas.height) p.dy*=-1;
+      });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>
